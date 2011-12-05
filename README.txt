@@ -1,4 +1,4 @@
-===JS-Syslog===
+=JS-Syslog=
 A better syslog daemon in JavaScript by Janne Enberg / lietu
 
 ==The goals of this application are==
