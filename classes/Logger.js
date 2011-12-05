@@ -42,18 +42,14 @@ Logger.initialize = function() {
 		} else {
 
 			// We loop through all the files, to open them
-			for( var x=0, count=levelDestinations.length; x<count; ++x ) {
+			for( var x=0, xcount=levelDestinations.length; x<xcount; ++x ) {
 
 				// Get the current file name
 				var file = levelDestinations[x];
 
 				// No need to open anything if this is STDIN or STDERR, will be handled differently
-				if( file==='STDOUT' || file==='STDERR' ) {
-
-					;
-
-				// If this file is not open yet
-				} else if( !logFileStreams[ file ] ) {
+				// Also, first check that this file isn't already open
+				if( file!=='STDOUT' && file!=='STDERR' && !logFileStreams[ file ] ) {
 
 					// Open the file, in append mode, with proper permissions etc.
 					logFileStreams[ file ] = fs.createWriteStream(file, {
@@ -66,7 +62,7 @@ Logger.initialize = function() {
 			}
 
 			// Create a function to write our log entry
-			var writer = (function(levelDestinations, logLevel) {
+			logFunctions[ logLevel ] = (function(levelDestinations, logLevel) {
 
 				// Create a function to actually handle the writing
 				return function(message) {
@@ -106,9 +102,6 @@ Logger.initialize = function() {
 
 			// Pass in current data, for saving them even when we change them later
 			})(levelDestinations, logLevel);
-
-			// Save the function
-			logFunctions[ logLevel ] = writer;
 		}
 	}
 

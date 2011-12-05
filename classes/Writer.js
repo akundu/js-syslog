@@ -136,6 +136,7 @@ Writer.initialize = function() {
 						client.collection(writerConfig.collection, onCollectionOpen)
 					});
 
+					// Build an identifier for this mongo connection
 					var identifier = writerConfig.destination + ':/' + writerConfig.database + '/' + writerConfig.collection;
 
 					// The actual writer function
@@ -162,6 +163,7 @@ Writer.initialize = function() {
 
 // Export the functions we want to expose
 module.exports = {
+
 	/**
 	 * Initialize the writer
 	 */
@@ -171,7 +173,7 @@ module.exports = {
 
 	/**
 	 * Write something
-	 * @param data An object containing at least the following: facility, severity, time
+	 * @param data An object containing at least the following: facility, severity, time, message
 	 */
 	write: function(data) {
 		Logger.log('DEBUG', 'Writer got data: ' + JSON.stringify(data));

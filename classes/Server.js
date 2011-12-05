@@ -86,37 +86,40 @@ Server.setUpSyslogUDPListener = function() {
 	// Create a UDP server
 	var server = dgram.createSocket("udp4");
 
-
-	var firstRequest = null;
-	var requestCount = 0;
+	var identifier = null;
 
 	server.on("message", function(message, requestInfo) {
+		// When was this message received?
+		var received = Utils.getTime();
+
 		// TODO: Push to a queue and process after dropping privileges
 		// Ignore if we shouldn't accept connections yet
 		if( Server.acceptConnections!==true ) {
 			return;
 		}
 
-		++requestCount;
-		var time = new Date().getTime();
-		if( !firstRequest ) {
-			firstRequest = time;
-		} else if ( requestCount%5000 === 0 ) {
-			var elapsedTime = (time - firstRequest) / 1000;
-			var reqPerSec = requestCount / elapsedTime;
+		Logger.log('DEBUG', 'Received data to UDP "' + identifier + '": ' + data);
 
-			console.log( "Elapsed time: " + elapsedTime + " seconds" );
-			console.log( "Requests: " + requestCount );
-			console.log( "Req/s: " + reqPerSec );
-			console.log( "" );
-		}
+		// Parse data from the string to a more useful format
+		var parsed = glossyParser.parse(data);
+
+		// Add the time received
+		parsed.received = received;
+
+		// Write parsed data
+		Writer.write(parsed);
+
 	});
 
 	// Run once the server is bound and listening
 	server.on("listening", function() {
+		// Get the server's address information
 		var addressInfo = server.address();
 
-		Logger.log('INFO', 'Syslog UDP server is listening to ' + addressInfo.address + ':' + addressInfo.port);
+		// Update identifier, so it can be used for logging
+		identifier = addressInfo.address + ':' + addressInfo.port;
+
+		Logger.log('INFO', 'Syslog UDP server is listening to ' + identifier);
 	});
 
 	// If the syslog server socket is closed
@@ -129,18 +132,30 @@ Server.setUpSyslogUDPListener = function() {
 		Logger.log('ERROR', 'Syslog UDP server caught exception: ' + exception);
 	});
 
-	// Bind to the syslog port
-	server.bind( config.servers.syslog.port );
+	// Next, we bind to the syslog port
+
+	// If there is a listen IP, also give that to bind
+	if( config.servers.syslog.listenIP && config.servers.syslog.listenIP!=='0.0.0.0' ) {
+		server.bind( config.servers.syslog.port, config.servers.syslog.listenIP );
+
+	// Otherwise, bind to all interfaces
+	} else {
+		server.bind( config.servers.syslog.port );
+	}
 };
 
 /**
  * Set up a relay listener
  */
-Server.setUpJSMongoSyslogRelayListener = function() {
-
+Server.setUpJSSyslogRelayListener = function() {
+	// TODO: Implement me
 };
 
 module.exports = {
+
+	/**
+	 * Bind all servers to their ports
+	 */
 	bind: function() {
 
 		// And the syslog Unix sockets, if needed
@@ -149,10 +164,13 @@ module.exports = {
 		// Set up the syslog UDP listener, if needed
 		Server.setUpSyslogUDPListener();
 
-		// And a listener for relayed JSMongoSyslog data
-		Server.setUpJSMongoSyslogRelayListener();
+		// And a listener for relayed JS-Syslog data
+		Server.setUpJSSyslogRelayListener();
 	},
 
+	/**
+	 * Start accepting connections, call this once extra privileges have been dropped etc. security precautions are in effect
+	 */
 	start: function() {
 		// Tell the servers it's ok to start accepting connections
 		Server.acceptConnections = true;

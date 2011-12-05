@@ -1,3 +1,6 @@
+/**
+ * Utility functions used in multiple classes
+ */
 var Utils = function() {
 	/**
 	 * Left-pad a string with something up to a certain length

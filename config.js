@@ -24,7 +24,7 @@ var config = {
 
 	        // IP address to listen to
 	        // null or '0.0.0.0' to listen to all interfaces
-	        listenIP: '127.0.0.1',
+	        listenIP: '0.0.0.0',
 
 	        // What port to listen to
 	        port: 514,
@@ -34,7 +34,7 @@ var config = {
 		    sockets: ['/dev/log']
 	    },
 
-	    /* JSMongoSysLog relay protocol */
+	    /* JS-Syslog relay protocol */
 	    relay: {
 
 		    // IP address to listen to

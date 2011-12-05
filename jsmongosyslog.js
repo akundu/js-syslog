@@ -11,7 +11,7 @@ try {
 	// Open our log files
 	Logger.initialize();
 
-	Logger.log('INFO', 'JSMongoSyslog starting up.');
+	Logger.log('INFO', 'JS-Syslog starting up.');
 
 	// Bind to our configured host & port
 	Server.bind();
@@ -35,7 +35,7 @@ try {
 
 } catch( e ) {
 	var message = "Uncaught error: " + e;
-	Logger.log('CRITICAL', message)
+	Logger.log('CRITICAL', message);
 	console.log(message);
 
 	// Rethrow for backtrace etc
