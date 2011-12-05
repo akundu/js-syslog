@@ -1,0 +1,5 @@
+syntax: regexp
+^\.idea
+^node\_modules
+\.log$
+
