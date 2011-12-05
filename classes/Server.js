@@ -27,8 +27,7 @@ Server.setUpSyslogUnixSockets = function() {
 		var socketPath = config.servers.syslog.sockets[i];
 
 		// Create a new closure so we can store the path in it
-		(function() {
-			var path = socketPath;
+		(function(socketPath) {
 
 			// Create a new socket
 			var server = new net.createServer();
@@ -46,7 +45,7 @@ Server.setUpSyslogUnixSockets = function() {
 
 				// Create a function to read the data from the socket
 				socket.on('data', function(data) {
-					Logger.log('DEBUG', 'Received data from socket "' + path + '": ' + data);
+					Logger.log('DEBUG', 'Received data from socket "' + socketPath + '": ' + data);
 
 					// Parse data from the string to a more useful format
 					var parsed = glossyParser.parse(data);
@@ -62,19 +61,19 @@ Server.setUpSyslogUnixSockets = function() {
 
 			// On closing listener
 			server.on('close', function() {
-				Logger.log('INFO', 'Syslog Unix socket connection for "' + path + '" closed.');
+				Logger.log('INFO', 'Syslog Unix socket connection for "' + socketPath + '" closed.');
 			});
 
 			// Set up an error handler
 			server.on('error', function(error) {
-				Logger.log('ERROR', 'Syslog Unix socket listener for "' + path + '" caught an error: ' + error);
+				Logger.log('ERROR', 'Syslog Unix socket listener for "' + socketPath + '" caught an error: ' + error);
 			});
 
 			// Connect to the socket
 			server.listen(socketPath, function() {
-				Logger.log('INFO', 'Syslog Unix socket for "' + path + '" listening.');
+				Logger.log('INFO', 'Syslog Unix socket for "' + socketPath + '" listening.');
 			});
-		})();
+		})(socketPath);
 	}
 };
 

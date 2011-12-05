@@ -80,7 +80,7 @@ module.exports = {
                 throw new Error("Configured to bind to port " + config.server.port + ". Ports < 1024 require root, and we're not running as root");
             }
 
-            Logger.log('INFO', "Not running as root, cannot drop privileges or chroot. Please consider running as root and dropping privileges to a separate user for increased security.");
+            Logger.log('WARNING', "Not running as root, cannot drop privileges or chroot. Please consider running as root and dropping privileges to a separate user for increased security.");
         }
     }
 };

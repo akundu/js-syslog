@@ -69,12 +69,10 @@ Writer.initialize = function() {
 		switch( writer.type ) {
 			case 'file':
 				// Create a new writer function in a new scope
-				Writer.writerFunctions.push((function(){
-
-					var writerConfig = writer;
+				Writer.writerFunctions.push((function(writer){
 
 					// {type: 'file', destination: '/var/log/test.log', filters: ['*']},
-					var stream = fs.createWriteStream(writerConfig.destination, {
+					var stream = fs.createWriteStream(writer.destination, {
 						flags: 'a',
 						mode: 0600,
 						encoding: 'utf8'
@@ -88,40 +86,36 @@ Writer.initialize = function() {
 
 					// The actual writer function
 					return function(data) {
-						if( Writer.filter(data, writerConfig.filters) ) {
+						if( Writer.filter(data, writer.filters) ) {
 							// Pass data through formatting and write to stream
 							stream.write( fileFormatter(data) );
 						}
 					}
-				})());
+				})(writer));
 				break;
 
 			case 'relay':
 				// Create a new writer function in a new scope
-				Writer.writerFunctions.push((function(){
+				Writer.writerFunctions.push((function(writer){
 
 					// TODO: Create the relay sending function
-
-					var writerConfig = writer;
 
 					// The actual writer function
 					return function(data) {
 						Logger.log('DEBUG', 'Would write data to relay, but someone forgot to implement it: ' + JSON.stringify(data));
 					}
-				})());
+				})(writer));
 				break;
 
 			case 'mongodb':
 				// Create a new writer function in a new scope
-				Writer.writerFunctions.push((function(){
-
-					var writerConfig = writer;
+				Writer.writerFunctions.push((function(writer){
 
 					// Parse Host & Port from the destination
-					var hostPort = Writer.parseHostPort(writerConfig.destination, 27017);
+					var hostPort = Writer.parseHostPort(writer.destination, 27017);
 
 					// Connect to the mongodb server
-					var client = new mongodb.Db(writerConfig.database, new mongodb.Server(hostPort.host, hostPort.port, {}));
+					var client = new mongodb.Db(writer.database, new mongodb.Server(hostPort.host, hostPort.port, {}));
 
 					// Handle to the collection
 					var collectionHandle = null;
@@ -133,11 +127,11 @@ Writer.initialize = function() {
 
 					// Wait for connection to open
 					client.open(function(error, p_client) {
-						client.collection(writerConfig.collection, onCollectionOpen)
+						client.collection(writer.collection, onCollectionOpen)
 					});
 
 					// Build an identifier for this mongo connection
-					var identifier = writerConfig.destination + ':/' + writerConfig.database + '/' + writerConfig.collection;
+					var identifier = writer.destination + ':/' + writer.database + '/' + writer.collection;
 
 					// The actual writer function
 					return function(data) {
@@ -154,7 +148,7 @@ Writer.initialize = function() {
 							});
 						}
 					}
-				})());
+				})(writer));
 				break;
 		}
 	}
