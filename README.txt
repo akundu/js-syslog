@@ -21,6 +21,7 @@ The application can currently replace your plain old syslog-ng/rsyslog/whatever,
  * Save the syslog messages to MongoDB in an ok format, save the messages to files but in a horrible format
  * Good internal logging ... or at least pretty good
  * Dropping privileges after binding to ports, opening files and sockets, if running as root
+ * Switching to a root jail, works at least on the Ubuntu dev box I set up for this
 
 ===What needs work===
  * The UDP protocol standards compliancy has not been tested, it might not work perfectly
@@ -29,7 +30,10 @@ The application can currently replace your plain old syslog-ng/rsyslog/whatever,
  * Some sort of basic init scripts that can be used as a base to replace any current Syslog daemons with this
 
 ==Installation==
- * This application requires the glossy and mongodb nodejs libraries, if you have npm installed, you can install glossy with "npm install glossy" and "npm install mongodb" 
+ * This application requires the daemon, glossy and mongodb nodejs libraries, if you have npm installed, you can install them with:
+   MODS="daemon glossy mongodb"; for mod in $MODS; do npm install $mod; done
+ * It is suggested you create a separate user and group for the application, check your OS docs on how to do this.
+ * It is also suggested you set up a root jail for the application to run in, at least on Ubuntu you can install "makejail" and then use the accompanied "setup_jail.sh" to create it, be sure to follow instructions.
 
 ==License==
 Licensed under "The MIT License", aka. the "Expat license". This license is available in LICENSE.txt distributed with the code, and at http://www.opensource.org/licenses/mit-license.php

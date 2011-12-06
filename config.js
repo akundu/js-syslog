@@ -7,13 +7,13 @@ var config = {
     security: {
 
         // UID or name of the user to run as, it is recommended that you create a new user for this
-        user: 'nobody',
+        user: 'jssyslog',
 
         // GID or name of the group to run as, it is recommended that you create a new user for this
-        group: 'nogroup',
+        group: 'jssyslog',
 
 	    // Path to chroot to, if possible ... null to disable chroot (not recommended)
-	    jailPath: '/var/empty'
+	    jailPath: '/var/chroot/jssyslog'
     },
 
 	/* Servers */

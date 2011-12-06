@@ -2,6 +2,8 @@
 var config = require('../config.js');
 
 // Load our requirements
+var daemon = require('daemon');
+var fs = require('fs');
 var Logger = require('../classes/Logger.js');
 
 var Security = {};
@@ -28,7 +30,48 @@ Security.isRoot = function() {
  * Move to a chroot jail
  */
 Security.jail =	function() {
-	Logger.log('INFO', 'Would love to move to a chroot jail at "' + config.security.jailPath + '", but someone forgot to implement this feature.');
+
+	// Check that we have a jail path
+	if( !config.security.jailPath ) {
+		Logger.log('INFO', 'Would move to a chroot jail, but none is configured.');
+	} else {
+
+		// Get the stat for the path we're configured for, sync because we want to finish before dropping root
+		var message;
+		try {
+			var stats = fs.lstatSync(config.security.jailPath);
+		} catch( e ) {
+			if( e.code==='ENOENT' ) {
+				message = 'Configured to chroot to "' + config.security.jailPath + '", but it does not exist.';
+				Logger.log('CRITICAL', message);
+				throw new Error(message);
+			} else {
+				throw new Error('Unknown error while checking chroot directory "' + JSON.stringify(e) + '".');
+			}
+		}
+
+		// Check that it's a directory
+		if( !stats.isDirectory() ) {
+			message = 'Configured to chroot to "' + config.security.jailPath + '", but it does not seem to be a directory.';
+			Logger.log('CRITICAL', message);
+			throw new Error(message);
+
+		// Can't think of anything else that could be wrong, maybe everything is fine
+		} else {
+			// Just chroot into it
+			try {
+				daemon.chroot(config.security.jailPath);
+
+				Logger.log('INFO', 'Successfully switched to chroot jail "' + config.security.jailPath + '"')
+
+			} catch (e) {
+				message = 'Error while trying to chroot to "' + config.security.jailPath + '", please check root jail: ' + e.toString();
+				Logger.log('CRITICAL', message);
+				throw new Error(message);
+			}
+		}
+	}
+
 };
 
 /**
@@ -49,8 +92,15 @@ Security.dropRoot = function() {
 		process.setuid(uid);
 
 	} catch ( e ) {
-		console.log('Failed to set UID and GID, please check logs and configuration.');
+		Logger.log('CRITICAL', 'Failed to set UID and GID, please check logs and configuration.');
 		throw( e );
+	}
+
+	// Double-check can't hurt, can it?
+	if( Security.isRoot()===true ) {
+		var message = 'Somehow failed to drop root privileges, but no errors occurred. Quite odd ...  isn\'t it?';
+		Logger.log('CRITICAL', message);
+		throw new Error(message);
 	}
 };
 
@@ -62,6 +112,7 @@ module.exports = {
      * @throws {Error}
      */
     initialize: function() {
+		// TODO: Redesign as asynchronous, shouldn't take too much of effort
 
         // If we are currently running as root, we have to do something about it
         if( Security.isRoot()===true ) {
@@ -69,7 +120,7 @@ module.exports = {
 	        // Switch to a chroot jail
 	        Security.jail();
 
-            // Drop root priviliges
+            // Drop root privileges
             Security.dropRoot();
 
         // No root? Let's check that we can do what we need to do still...
@@ -80,7 +131,7 @@ module.exports = {
                 throw new Error("Configured to bind to port " + config.server.port + ". Ports < 1024 require root, and we're not running as root");
             }
 
-            Logger.log('WARNING', "Not running as root, cannot drop privileges or chroot. Please consider running as root and dropping privileges to a separate user for increased security.");
+            Logger.log('WARNING', "Not running as root, cannot drop privileges or chroot. Please consider running as root and configuring to run as a unique user for increased security.");
         }
     }
 };
